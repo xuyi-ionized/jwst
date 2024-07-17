@@ -1206,6 +1206,101 @@ class IFUCubeData():
         if self.weighting == 'emsm':
             log.debug(f'scalerad {self.scalerad}')
 
+
+# ******************************************************************************
+    def setup_ifucube_wcs_from_file(self):
+        '''read header from known data cube and determine the coordinates
+        '''
+        log.info('determine cube parameters from file %s', self.wcs_file)
+        try:
+            dm = datamodels.IFUCubeModel(self.wcs_file)
+        except FileNotFoundError:
+            log.error('Problem opening file that contains wcs (%s)', self.wcs_file)
+            raise FileNotFoundError
+        wcsinfo = dm.meta.wcsinfo
+        
+        self.cdelt1 = wcsinfo.cdelt1
+        self.cdelt2 = wcsinfo.cdelt2
+        self.cdelt3 = wcsinfo.cdelt3
+        self.crpix1 = wcsinfo.crpix1
+        self.crpix2 = wcsinfo.crpix2
+        self.crpix3 = wcsinfo.crpix3
+        self.crval1 = wcsinfo.crval1
+        self.crval2 = wcsinfo.crval2
+        self.crval3 = wcsinfo.crval3
+        self.naxis3, self.naxis2, self.naxis1 = dm.shape
+                
+        # self.rot_angle = self.cube_pa
+        self.rot_angle = np.arccos(wcsinfo.pc1_1) * 180. / np.pi
+        log.info(f'Setting rotation angle between ifu and sky: {self.rot_angle}')
+        log.info(f'shoud be cube_pa = {self.cube_pa} if use `skyalign`')
+        
+        self.num_bands = len(self.list_par1)
+        log.debug('Number of bands in cube: %i', self.num_bands)
+        
+        # mimic routines in `set_geometry`` to set some attributes
+        # I don't know which attributes are really needed
+        
+        na = int(self.naxis1 / 2)
+        nb = int(self.naxis2 / 2)
+        xi_min = 0.0 - (na * self.cdelt1) - (self.cdelt1 / 2.0)
+        xi_max = (na * self.cdelt1) + (self.cdelt1 / 2.0)
+
+        eta_min = 0.0 - (nb * self.cdelt2) - (self.cdelt2 / 2.0)
+        eta_max = (nb * self.cdelt2) + (self.cdelt2 / 2.0)
+        
+        self.a_min = xi_min
+        self.a_max = xi_max
+        self.b_min = eta_min
+        self.b_max = eta_max
+        # center of spaxels
+        self.xcoord = np.zeros(self.naxis1)
+        xstart = xi_min + self.cdelt1 / 2.0
+        self.xcoord = np.arange(start=xstart, stop=xstart + self.naxis1 * self.cdelt1, step=self.cdelt1)
+
+        self.ycoord = np.zeros(self.naxis2)
+        ystart = eta_min + self.cdelt2 / 2.0
+        self.ycoord = np.arange(start=ystart, stop=ystart + self.naxis2 * self.cdelt2, step=self.cdelt2)
+        # depending on the naxis and cdelt values the x,ycoord can have 1 more element than naxis.
+        # Clean up arrays dropping extra values at the end.
+        self.xcoord = self.xcoord[0:self.naxis1]
+        self.ycoord = self.ycoord[0:self.naxis2]
+
+        xv, yv = np.meshgrid(self.xcoord, self.ycoord)
+        self.xcenters = xv.flatten()
+        self.ycenters = yv.flatten()
+        # _______________________________________________________________________
+        # set up the lambda (z) coordinate of the cube        
+        self.cdelt3_normal = None
+        if self.linear_wavelength:
+            # CRPIX3 for FITS is 1 (center of first pixel)
+            # CRVAL3 then is lambda_min + self.cdelt3/ 2.0, which is also zcoord[0]
+            # Note that these are all values at the center of a spaxel
+            # self.crval3 = self.lambda_min + self.cdelt3 / 2.0
+            self.lambda_min = self.crval3 - self.cdelt3 / 2.0
+            self.lambda_max = self.lambda_min + (self.naxis3) * self.cdelt3
+
+            self.zcoord = np.zeros(self.naxis3)
+
+            self.crpix3 = 1.0
+            zstart = self.lambda_min + self.cdelt3 / 2.0
+            self.zcoord = np.arange(start=zstart, stop=self.lambda_max, step=self.cdelt3)
+            self.zcoord = self.zcoord[0:self.naxis3]
+        else:
+            self.naxis3 = len(self.wavelength_table)
+            self.zcoord = np.asarray(self.wavelength_table)
+            self.crval3 = self.wavelength_table[0]
+            self.crpix3 = 1.0
+        # set up the cdelt3_normal normalizing array used
+        cdelt3_normal = np.zeros(self.naxis3)
+        for j in range(self.naxis3 - 1):
+            cdelt3_normal[j] = self.zcoord[j + 1] - self.zcoord[j]
+
+        cdelt3_normal[self.naxis3 - 1] = cdelt3_normal[self.naxis3 - 2]
+        self.cdelt3_normal = cdelt3_normal
+        
+        self.print_cube_geometry()
+
 # ******************************************************************************
 
     def setup_ifucube_wcs(self):

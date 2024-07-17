@@ -1,16 +1,35 @@
 # JWST Calibration Pipeline
 
-[![Build Status](https://github.com/spacetelescope/jwst/workflows/CI/badge.svg)](https://github.com/spacetelescope/jwst/actions)
-[![codecov](https://codecov.io/gh/spacetelescope/jwst/branch/main/graph/badge.svg?token=Utf5Zs9g7z)](https://codecov.io/gh/spacetelescope/jwst)
+<!---
+[![Build Status](https://github.com/spacetelescope/jwst/workflows/CI/badge.svg?branch=master)](https://github.com/spacetelescope/jwst/actions)
+[![codecov](https://codecov.io/gh/spacetelescope/jwst/branch/master/graph/badge.svg?token=Utf5Zs9g7z)](https://codecov.io/gh/spacetelescope/jwst)
 [![Documentation Status](https://readthedocs.org/projects/jwst-pipeline/badge/?version=latest)](http://jwst-pipeline.readthedocs.io/en/latest/?badge=latest)
 [![Powered by STScI Badge](https://img.shields.io/badge/powered%20by-STScI-blue.svg?colorA=707170&colorB=3e8ddd&style=flat)](http://www.stsci.edu)
 [![Powered by Astropy Badge](http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat)](http://www.astropy.org/)
 [![DOI](https://zenodo.org/badge/60551519.svg)](https://zenodo.org/badge/latestdoi/60551519)
+-->
 
 ![STScI Logo](docs/_static/stsci_logo.png)
 
 > [!IMPORTANT]
 > JWST requires a C compiler for dependencies and is currently limited to Python 3.10, 3.11, or 3.12.
+
+Modify [ifu_cube.py](jwst/cube_build/ifu_cube.py) to use output wcs specified by a user supplied file. Currently based on JWST pipeline version 1.17.1.
+
+New arguments for `CubeBuildStep`
+
+`coord_system [string]`
+
+> a new option of `coord_system=from_file` to read wcs from given fits file
+
+`wcs_file [string]`
+
+> path to the fits file whose wcs is used as a reference. Currently tested with `calwebb_spec3` output.
+
+
+***original README below***
+
+**JWST requires Python 3.9 or above and a C compiler for dependencies.**
 
 > [!NOTE]
 > Linux and MacOS platforms are tested and supported.  Windows is not currently supported.

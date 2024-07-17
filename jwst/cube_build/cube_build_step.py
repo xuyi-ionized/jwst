@@ -48,7 +48,8 @@ class CubeBuildStep (Step):
          scalexy = float(default=0.0) # cube sample size to use for axis 1 and axis2, arc seconds
          scalew = float(default=0.0) # cube sample size to use for axis 3, microns
          weighting = option('emsm','msm','drizzle',default = 'drizzle') # Type of weighting function
-         coord_system = option('skyalign','world','internal_cal','ifualign',default='skyalign') # Output Coordinate system.
+         coord_system = option('skyalign','world','internal_cal','ifualign','from_file',default='skyalign') # Output Coordinate system.
+         wcs_file = string(default=None) # WCS file to use for cube building
          ra_center = float(default=None) # RA center of the IFU cube
          dec_center = float(default=None) # Declination center of the IFU cube
          cube_pa = float(default=None) # The position angle of the desired cube in decimal degrees E from N
@@ -133,6 +134,7 @@ class CubeBuildStep (Step):
         # 1. skyalign (ra dec) (aka world)
         # 2. ifualign (ifu cube aligned with slicer plane/ MRS local coord system)
         # 3. internal_cal (local IFU - ifu cubes built in local IFU system)
+        # 4. from_file (use the coordinate system in the `wcs_file` file)
         if self.coord_system == 'world':
             self.coord_system = 'skyalign'
 
@@ -279,6 +281,7 @@ class CubeBuildStep (Step):
             'weighting': self.weighting,
             'weight_power': self.weight_power,
             'coord_system': self.pars_input['coord_system'],
+            'wcs_file': self.pars_input['wcs_file'],
             'ra_center': self.ra_center,
             'dec_center': self.dec_center,
             'cube_pa': self.cube_pa,
