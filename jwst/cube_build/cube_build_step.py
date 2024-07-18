@@ -181,6 +181,7 @@ class CubeBuildStep (Step):
         # including values in pars_input that could get updated in cube_build_step.py
 
         self.pars_input['coord_system'] = self.coord_system
+        self.pars_input['wcs_file'] = self.wcs_file
 
         if self.single:
             self.pars_input['output_type'] = 'single'
@@ -377,7 +378,11 @@ class CubeBuildStep (Step):
                 thiscube.determine_cube_parameters_internal()
             else:
                 thiscube.determine_cube_parameters()
-            thiscube.setup_ifucube_wcs()
+
+            if self.coord_system == 'from_file':
+                thiscube.setup_ifucube_wcs_from_file()
+            else:
+                thiscube.setup_ifucube_wcs()
 # _______________________________________________________________________________
 # build the IFU Cube
 

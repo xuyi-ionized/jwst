@@ -80,6 +80,7 @@ class IFUCubeData():
         self.spectral_size = None
         self.interpolation = pars_cube.get('interpolation')
         self.coord_system = pars_cube.get('coord_system')
+        self.wcs_file = pars_cube.get('wcs_file')
         self.wavemin = pars_cube.get('wavemin')
         self.wavemax = pars_cube.get('wavemax')
         self.weighting = pars_cube.get('weighting')
@@ -1219,8 +1220,8 @@ class IFUCubeData():
             raise FileNotFoundError
         wcsinfo = dm.meta.wcsinfo
         
-        self.cdelt1 = wcsinfo.cdelt1
-        self.cdelt2 = wcsinfo.cdelt2
+        self.cdelt1 = wcsinfo.cdelt1 * 3600
+        self.cdelt2 = wcsinfo.cdelt2 * 3600
         self.cdelt3 = wcsinfo.cdelt3
         self.crpix1 = wcsinfo.crpix1
         self.crpix2 = wcsinfo.crpix2
@@ -1230,10 +1231,10 @@ class IFUCubeData():
         self.crval3 = wcsinfo.crval3
         self.naxis3, self.naxis2, self.naxis1 = dm.shape
                 
-        # self.rot_angle = self.cube_pa
-        self.rot_angle = np.arccos(wcsinfo.pc1_1) * 180. / np.pi
-        log.info(f'Setting rotation angle between ifu and sky: {self.rot_angle}')
-        log.info(f'shoud be cube_pa = {self.cube_pa} if use `skyalign`')
+        self.rot_angle = self.cube_pa
+        # self.rot_angle = np.arccos(wcsinfo.pc1_1) * 180. / np.pi
+        # log.info(f'Setting rotation angle between ifu and sky: {self.rot_angle}')
+        # log.info(f'shoud be cube_pa = {self.cube_pa} if use `skyalign`')
         
         self.num_bands = len(self.list_par1)
         log.debug('Number of bands in cube: %i', self.num_bands)
